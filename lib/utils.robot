@@ -279,6 +279,24 @@ Redfish Set Boot Default
     Should Be Equal As Strings  ${resp["BootSourceOverrideMode"]}  ${override_mode}
 
 
+Redfish Get Settings Resource URI
+    [Documentation]  Get Settings resource URI if present
+
+    ${resp}=  Redfish.Get Properties  /redfish/v1/Systems/${SYSTEM_ID}
+
+    # Check if @Redfish.Settings member present
+    ${status}=  Run Keyword And Return Status
+    ...  Get From Dictionary  ${resp}  @Redfish.Settings
+
+    # If @Redfish.Settings object present return SettingsObject URI
+    ${return_uri}=
+    ...  Run Keyword If  '${status}'=='${TRUE}'
+    ...    Set Variable  ${resp["@Redfish.Settings"]["SettingsObject"]["@odata.id"]}
+    ...  ELSE
+    ...    Set Variable  /redfish/v1/Systems/${SYSTEM_ID}
+
+    [Return]  ${return_uri}
+
 Redfish Set Boot Source
     [Documentation]  Set and Verify Boot source override
     [Arguments]      ${override_enabled}  ${override_target}
@@ -294,10 +312,14 @@ Redfish Set Boot Source
 
     ${payload}=  Create Dictionary  Boot=${data}
 
-    Redfish.Patch  /redfish/v1/Systems/${SYSTEM_ID}  body=&{payload}
+    ${rsrc_uri}= Redfish Get Settings Resource URI
+    
+    Log  Resource URI Amrathesh ${rsrc_uri}  console=yes
+
+    Redfish.Patch  ${rsrc_uri}  body=&{payload}
     ...  valid_status_codes=[${HTTP_OK},${HTTP_CREATED},${HTTP_ACCEPTED},${HTTP_NO_CONTENT}]
 
-    ${resp}=  Redfish.Get Attribute  /redfish/v1/Systems/${SYSTEM_ID}  Boot
+    ${resp}=  Redfish.Get Attribute  ${rsrc_uri}  Boot
     Should Be Equal As Strings  ${resp["BootSourceOverrideEnabled"]}  ${override_enabled}
     Should Be Equal As Strings  ${resp["BootSourceOverrideTarget"]}  ${override_target}
 

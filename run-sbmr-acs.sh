@@ -49,7 +49,7 @@ echo ""
 case "$INTERFACE" in
   'oob')
     echo "===== Running sbmr-acs-oob test suite ====="
-    robot --argumentfile config --argumentfile test_lists/sbmr-acs-oob $DEBUG \
+    robot --argumentfile config --argumentfile test_lists/sbmr-test $DEBUG \
       --name "SBMR-ACS OOB" . | tee $CONSOLE_LOG
     ;;
   'linux')
