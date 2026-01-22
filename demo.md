@@ -144,3 +144,156 @@ mctp route
 - Routes are expressed in terms of MCTP endpoints and links, not physical bus addresses
 
 ---
+
+## M3_SB_4
+PLDM over MCTP binding is used as the format of PLDM over MCTP messages.
+
+### Objective
+Verify that **PLDM messages are carried using the PLDM-over-MCTP binding**, ensuring that PLDM is not transported using proprietary or non-standard encapsulation.
+
+### Preconditions
+- **M3_SB_2** has complied (PLDM is present and exposes platform-level data models)
+- **M3_SB_3** has complied (MCTP transport is implemented and active)
+
+### Test Plan
+
+#### Verify PLDM is layered on top of MCTP transport
+
+**Command**
+```sh
+systemctl show pldmd.service | grep -E "After=|Requires=|Wants="
+```
+
+**Expected Result**
+- Output shows ordering or dependency on MCTP-related units  
+  (for example `mctpd.service`, `mctp.target`, or `mctp-local.target`)
+- Confirms PLDM operates over the MCTP transport layer
+
+---
+
+## M3_SB_5
+SPDM is used for the purpose of supporting security related capabilities of the devices.
+
+### Objective
+Verify that **if security-related capabilities are implemented for the side-band interface**, they are implemented using **SPDM**.
+
+### Test Plan
+
+####  Verify SPDM support is present
+
+**Command**
+```sh
+systemctl list-units --type=service | grep -i spdm
+```
+or
+```sh
+busctl list | grep -i spdm
+```
+
+**Expected Result**
+- One or more SPDM-related services are listed
+
+---
+
+## M3_SB_6, M3_SB_8
+SPDM over MCTP binding is used as the format of SPDM over MCTP messages.
+
+### Objective
+Verify that **SPDM messages are transported using the SPDM-over-MCTP binding**.
+
+### Preconditions
+- M3_SB_5 is complied.
+
+### Test Plan
+
+#### Verify SPDM depends on MCTP transport
+
+**Command**
+```sh
+systemctl show <spdm-service> | grep -E "After=|Requires=|Wants="
+```
+
+**Expected Result**
+- Dependency on MCTP services is present
+
+---
+
+## M3_SB_7
+Secure messages using SPDM specifications is used for the purpose of supporting secure transfer of application data over PMCI transports using SPDM.
+
+### Objective
+Verify that **secure messaging uses SPDM secure messaging semantics**.
+
+### Preconditions
+- M3_SB_5 is complied.
+### Test Plan
+
+#### Step 1: Verify secure messaging capability is present
+
+**Command**
+```sh
+busctl introspect <spdm-dbus-service> <object-path>
+```
+
+**Expected Result**
+- Secure messaging capability is indicated
+
+---
+
+## M3_SB_9
+The physical and data-link layer methods for MCTP communication are minimally defined by the MCTP over SMBus/I2C binding specification.
+
+### Objective
+Verify that **MCTP communication supports SMBus/I2C or a higher-bandwidth binding**.
+
+### Preconditions
+- M3_SB_3 has complied
+
+### Test Plan
+
+#### Step 1: Verify MCTP physical binding
+
+**Command**
+```sh
+mctp link
+```
+
+**Expected Result**
+- MCTP link shows SMBus/I2C or higher-bandwidth binding
+
+---
+
+#### Step 2: Verify bidirectional addressing
+
+**Command**
+```sh
+mctp addr
+```
+
+**Expected Result**
+- Endpoint ID (EID) is assigned
+
+## M4_SB_1
+The physical and data-link layer methods for MCTP communication are defined by the MCTP over I3C binding specification.
+
+### Objective
+Verify that **MCTP communication uses I3C binding** at SBMR Level M4.
+
+### Preconditions
+- Platform claims SBMR Level M4
+
+### Test Plan
+
+#### Verify MCTP over I3C binding
+
+**Command**
+```sh
+mctp link
+```
+
+**Expected Result**
+- MCTP link indicates I3C-based transport
+
+---
+
+
